@@ -20,19 +20,7 @@ const defaultIcon = L.icon({
   popupAnchor: [1, -34],
   tooltipAnchor: [16, -28],
 })
-const iconPerson = new L.Icon({
-  iconUrl: require('./hotel.svg'),
-  iconRetinaUrl: require('./hotel.svg'),
-  iconAnchor: null,
-  popupAnchor: null,
-  shadowUrl: null,
-  shadowSize: null,
-  shadowAnchor: null,
-  iconSize: new L.Point(60, 75),
-  className: 'leaflet-div-icon'
-});
 
-var arr=Array.from({length: 3}, (x,i) => i);
 class App extends Component {
   constructor(props) {
     super(props);
@@ -41,9 +29,6 @@ class App extends Component {
       isLoaded: false,
       items: []
     };
-  }
-  onMarkerClick(e, marker) {
-    this.props.onMarkerClick && this.props.onMarkerClick(e, marker);
   }
  
   componentDidMount() {
@@ -92,7 +77,7 @@ class App extends Component {
           attribution="&amp;copy <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-         <CanvasMarkersLayer onMarkerClick={(e, marker) => this.onMarkerClick(e, marker)} dataKey='properties'>
+         <CanvasMarkersLayer  dataKey='properties'>
          {markers}
           </CanvasMarkersLayer>
       </Map>
