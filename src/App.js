@@ -27,7 +27,8 @@ class App extends Component {
     this.state = {
       error: null,
       isLoaded: false,
-      items: []
+      items: [],
+      filteredItems: []
     };
   }
  
@@ -38,7 +39,8 @@ class App extends Component {
         (result) => {
           this.setState({
             isLoaded: true,
-            items: result
+            items: result,
+            filteredItems: result
           });
         },
         // Note: it's important to handle errors here
