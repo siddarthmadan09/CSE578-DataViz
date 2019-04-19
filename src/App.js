@@ -1,46 +1,105 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import { Map, TileLayer, ZoomControl,Marker, Popup, Tooltip } from 'react-leaflet';
+import { Map, TileLayer, ZoomControl,CircleMarker,Marker, Popup, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import CanvasMarkersLayer from './CanvasMarkersLayer';
+import markerIcon from './new-hotel.png';
 
-delete L.Icon.Default.prototype._getIconUrl;
 
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
-    iconUrl: require('leaflet/dist/images/marker-icon.png'),
-    shadowUrl: require('leaflet/dist/images/marker-shadow.png')
-});
-const position = [42, -90];
+const position = [50,-100]
 var maxBounds = [
   [5.499550, -167.276413], //Southwest
   [83.162102, -52.233040]  //Northeast
 ];
+const defaultIcon = L.icon({
+  iconUrl: markerIcon,
+  iconSize:    [24, 41],
+  iconAnchor:  [12, 41],
+  popupAnchor: [1, -34],
+  tooltipAnchor: [16, -28],
+})
+const iconPerson = new L.Icon({
+  iconUrl: require('./hotel.svg'),
+  iconRetinaUrl: require('./hotel.svg'),
+  iconAnchor: null,
+  popupAnchor: null,
+  shadowUrl: null,
+  shadowSize: null,
+  shadowAnchor: null,
+  iconSize: new L.Point(60, 75),
+  className: 'leaflet-div-icon'
+});
+
 var arr=Array.from({length: 3}, (x,i) => i);
 class App extends Component {
-  
+  constructor(props) {
+    super(props);
+    this.state = {
+      error: null,
+      isLoaded: false,
+      items: []
+    };
+  }
+  onMarkerClick(e, marker) {
+    this.props.onMarkerClick && this.props.onMarkerClick(e, marker);
+  }
+ 
+  componentDidMount() {
+    fetch("http://localhost:8080/api/offering")
+      .then(res => res.json())
+      .then(
+        (result) => {
+          this.setState({
+            isLoaded: true,
+            items: result
+          });
+        },
+        // Note: it's important to handle errors here
+        // instead of a catch() block so that we don't swallow
+        // exceptions from actual bugs in components.
+        (error) => {
+          this.setState({
+            isLoaded: true,
+            error
+          });
+        }
+      )
+  }
+ 
   render() {
-    let markers = arr.map((x) => {
-      return <Marker position={[position[0]+5*x,position[1]+5*x]}>
-      <Tooltip>
-          <span>
-            A pretty CSS3 popup. <br/> Easily customizable.
-          </span>
-      </Tooltip>
-    </Marker>
-    })
-    //const position = [this.state.lat, this.state.lng]
-    return (
-      <Map center={position} zoom={5} maxBounds={maxBounds} style={{height: '750px'}}>
-      <TileLayer
-        attribution="&amp;copy <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+    const { error, isLoaded, items } = this.state;
+    console.log(this.context);
+    if (error) {
+      return <div>Error: {error.message}</div>;
+    } else if (!isLoaded) {
+      return <div>Loading...</div>;
+    } else {
+      const markers = this.state.items.map((v, i) => {
+        return (<Marker key={i} position={[v.lat,v.long]} icon={defaultIcon} properties={v}>
+          <Popup>
+            <div><strong>num：</strong><span>{i}</span></div>
+          </Popup>
+        </Marker>);
+      });
+      //const position = [this.state.lat, this.state.lng]
       
-      {markers}
-    </Map>
-    );
+      return (
+        <div>
+      <Map center={position} zoom={5} preferCanvas={true} maxBounds={maxBounds} style={{height: '750px'}}>
+        <TileLayer
+          attribution="&amp;copy <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+         <CanvasMarkersLayer onMarkerClick={(e, marker) => this.onMarkerClick(e, marker)} dataKey='properties'>
+         {markers}
+          </CanvasMarkersLayer>
+      </Map>
+      </div>
+
+      );
+    }
   }
 }
 
