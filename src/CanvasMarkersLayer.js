@@ -4,7 +4,7 @@ import L from 'leaflet';
 import { isEqual } from 'lodash';
 
 
-require('./leaflet.canvas-markers');
+require('./leaflet.canvas-markers1');
 // require('../node_modules/leaflet-canvas-marker/src/leaflet.canvas-markers');
 
 const getType = (ob) => {
@@ -29,6 +29,7 @@ export default class CanvasMarkersLayer extends MapLayer {
     this.leafletElement.addTo(this.context.map);
     this.initEventListeners(this.leafletElement);
   }
+ 
   componentDidMount() {
     /* eslint-disable no-underscore-dangle */
     this.leafletElement._reset();

@@ -24,5 +24,18 @@ export default ({ config, db }) => {
 		
 	});
 
+	api.get('/review/:offering_id', (req, res) => {
+		let offering_id = parseInt(req.params['offering_id']);
+		console.log(offering_id);
+		var dbo = db.db("dv_project");
+  		dbo.collection("reviews").find({offering_id}).toArray( function(err, result) {
+    	if (err){
+			throw err;
+		}
+		res.json(result );
+		});
+		
+	});
+
 	return api;
 }

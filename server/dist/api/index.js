@@ -38,6 +38,18 @@ exports.default = function (_ref) {
 		});
 	});
 
+	api.get('/review/:offering_id', function (req, res) {
+		var offering_id = parseInt(req.params['offering_id']);
+		console.log(offering_id);
+		var dbo = db.db("dv_project");
+		dbo.collection("reviews").find({ offering_id: offering_id }).toArray(function (err, result) {
+			if (err) {
+				throw err;
+			}
+			res.json(result);
+		});
+	});
+
 	return api;
 };
 //# sourceMappingURL=index.js.map
