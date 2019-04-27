@@ -31,3 +31,24 @@
     transform: rotate(360deg);
   }
 }
+.app-outer {
+	align-items: center; 
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+
+	padding: 20px 0;
+	
+}
+.app-inner {
+	display: flex;
+	flex-direction: column;
+	height: 900px;
+	max-width: 1000px;
+	width: 80%;
+}
+.tag-cloud {
+  flex: 1;
+  height: '200px';
+  width:'600px';
+}

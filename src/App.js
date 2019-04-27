@@ -27,14 +27,9 @@ import {
 import {FaTimes} from 'react-icons/fa';
 import TagCloud from 'react-tag-cloud';
 import randomColor from 'randomcolor';
- 
-class MyCloud extends Component {
-  render() {
-    return (
-     null
-    );
-  }
-}
+
+
+const rotarray = [0,90]
 
 const position = [33.44896,-112.073]
 var maxBounds = [
@@ -103,13 +98,6 @@ class App extends Component {
   openModal() {
     this.setState({isModalOpen: true});
   }
-//   handleTrackerChanged = tracker => {
-//     if (!tracker) {
-//         this.setState({ tracker, x: null, y: null });
-//     } else {
-//         this.setState({ tracker });
-//     }
-// };
 
 handleTimeRangeChange = timerange => {
     this.setState({ timerange });
@@ -165,7 +153,10 @@ handleMouseMove = (x, y) => {
    
  }
   componentDidMount() {
-    fetch("http://localhost:8080/api/offering")
+    setInterval(() => {
+        this.forceUpdate();
+      }, 3000);
+    fetch("http://hoteladvisor.xyz:8080/api/offering")
       .then(res => res.json())
       .then(
         (result) => {
@@ -188,7 +179,7 @@ handleMouseMove = (x, y) => {
   }
   onMarkerClick = (e, marker) => {
     let curr = marker[0].data.options.properties;
-    fetch("http://localhost:8080/api/review/"+curr['id'])
+    fetch("http://hoteladvisor.xyz:8080/api/review/"+curr['id'])
       .then(res => res.json())
       .then(
         (results) => {
@@ -241,27 +232,58 @@ handleMouseMove = (x, y) => {
           });
         }
       );
-  //   let currencySeries = new TimeSeries({
-  //     name: "Currency",
-  //     columns: ["time", "aud", "euro"],
-  //     points: buildPoints()
-  // });
   
-  // let style = styler([
-  //     { key: "aud", color: "steelblue", width: 2 },
-  //     { key: "euro", color: "#F68B24", width: 2 }
-  // ]);
-  
-    //this.setState({isModalOpen:true,curr,currencySeries,style,timerange: currencySeries.range()});
   }
   
 
   render() {
     const f = format(".1f");
     let range = this.state.timerange;
+    let {curr} = this.state
     let selectedKey = this.state.selectedKey;
     let categories = [{ key:selectedKey, label: selectedKey}];
-    
+    let text =[]
+    if(curr){
+      for(let key in curr.positive){
+        let k = Math.floor(Math.random() * rotarray.length);
+        while(k == rotarray.lentgh){
+          k = Math.floor(Math.random() * rotarray.length)
+        }
+        let dt = new Date().getTime();
+        text.push(
+          
+          <div
+              key ={dt+"_"+key}
+              style={{
+                fontFamily: 'serif',
+                fontSize: 40,
+                fontWeight: 'bold',
+                color: 'green',
+                rotate: rotarray[k]
+              }}>{curr['positive'][key]['word']}
+            </div>
+        )
+      } 
+      for(let key in curr.negative){
+        let k = Math.floor(Math.random() * rotarray.length);
+        while(k == rotarray.lentgh){
+          k = Math.floor(Math.random() * rotarray.length)
+        }
+        let dt = new Date().getTime();
+        text.push(
+          <div
+          key ={dt+"_"+key}
+              style={{
+                fontFamily: 'serif',
+                fontSize: 40,
+                fontWeight: 'bold',
+                color: 'red',
+                rotate: rotarray[k]
+              }}>{curr['negative'][key]['word']}
+            </div>
+        )
+      } 
+    }
     let stateoptions = states.map((st)=>{
       return(<option key={st.abbreviation} value={st.abbreviation}>{st.name}</option>)
     });
@@ -341,6 +363,7 @@ handleMouseMove = (x, y) => {
             paddingRight:"10px",marginLeft:"10px"}} onClick={this.resetHotels}>RESET</button>
           </h4>
       </div>
+      
       <Map center={position} zoom={16} preferCanvas={true} maxBounds={maxBounds} style={{height: '90vh'}}>
         <TileLayer
           attribution="&amp;copy <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
@@ -366,14 +389,14 @@ handleMouseMove = (x, y) => {
               <h2 style={{textAlign:"center"}}>Ratings History</h2>
             </div>
             <div style={{marginTop:"20px",marginBottom:"20px",textAlign:"center"}} className="col-md-12">
-            <label style={{paddingRight:"10px"}}>
-          Select Rating Type:
-          <select value={this.state.selectedKey} onChange={(event) => {this.handleRatingChange(event)}}>
-            {options}
-          </select>
-        </label>
-        </div>
-              <div className="col-md-12">
+              <label style={{paddingRight:"10px"}}>
+                Select Rating Type:
+                <select value={this.state.selectedKey} onChange={(event) => {this.handleRatingChange(event)}}>
+                  {options}
+                </select>
+              </label>
+            </div>
+            <div className="col-md-12">
                   <Resizable>
                       <ChartContainer
                           timeRange={range}
@@ -456,55 +479,30 @@ handleMouseMove = (x, y) => {
               </div>
           </div>
           <div className="row">
-              <div className="col-md-12">
-              <TagCloud 
-            className='tag-cloud'
-            style={{
-              fontFamily: 'sans-serif',
-              //fontSize: () => Math.round(Math.random() * 50) + 16,
-              fontSize: 30,
-              color: () => randomColor({
-                hue: 'blue'
-              }),
-              padding: 5,
-            }}>
-            <div
-              style={{
-                fontFamily: 'serif',
-                fontSize: 40,
-                fontStyle: 'italic',
-                fontWeight: 'bold',
-                color: randomColor()
-              }}>Futurama</div>
-            <div style={styles.large}>Transformers</div>
-            <div style={styles.large}>Simpsons</div>
-            <div style={styles.large}>Dragon Ball</div>
-            <div style={styles.large}>Rick & Morty</div>
-            <div style={{fontFamily: 'courier'}}>He man</div>
-            <div style={{fontSize: 30}}>World trigger</div>
-            <div style={{fontStyle: 'italic'}}>Avengers</div>
-            <div style={{fontWeight: 200}}>Family Guy</div>
-            <div style={{color: 'green'}}>American Dad</div>
-            <div>Gobots</div>
-            <div>Thundercats</div>
-            <div>M.A.S.K.</div>
-            <div>GI Joe</div>
-            <div>Inspector Gadget</div>
-            <div>Bugs Bunny</div>
-            <div>Tom & Jerry</div>
-            <div>Cowboy Bebop</div>
-            <div>Evangelion</div>
-            <div>Bleach</div>
-            <div>GITS</div>
-            <div>Pokemon</div>
-            <div>She Ra</div>
-            <div>Fullmetal Alchemist</div>
-            <div>Gundam</div>
-            <div>Uni Taisen</div>
-            <div>Pinky and the Brain</div>
-            <div>Bobs Burgers</div>
-          </TagCloud>
+            <div className="col-md-12" style={{marginTop:"20px",marginBottom:"20px",textAlign:"center"}}>
+              <h2 style={{textAlign:"center"}}>People Opinions</h2>
+            </div>
+            <div className="col-md-12">
+              <div className="app-outer">
+                <div className="app-inner">
+                  <TagCloud 
+                    className='tag-cloud'
+                    style={{
+                      fontFamily: 'sans-serif',
+                      //fontSize: () => Math.round(Math.random() * 50) + 16,
+                      fontSize: 30,
+                      color: () => randomColor({
+                        hue: 'blue'
+                      }),
+                      padding: 5,
+                      height: '900px',
+                    width:'100%'
+                    }}>
+                      {text}
+                  </TagCloud>
+                </div>
               </div>
+            </div>
           </div>
       </div>
             :null}
@@ -518,6 +516,13 @@ handleMouseMove = (x, y) => {
 
 const styles = {
 content : {
+},
+red :{
+  color: 'red'
+},
+green: {
+  color: 'green'
 }
+
 }
 export default App;
