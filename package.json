@@ -18,7 +18,7 @@
     "react-timeseries-charts": "^0.15.5"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "pm2 start node_modules/react-scripts/scripts/start.js --name 'hoteladvisor'",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
