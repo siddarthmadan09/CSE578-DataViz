@@ -29,13 +29,22 @@ import TagCloud from 'react-tag-cloud';
 import randomColor from 'randomcolor';
 
 
+
+//text cloud font limits
+const fontMin = 30;
+const fontMax = 60;
 const rotarray = [0,90]
 
+//init position
 const position = [33.44896,-112.073]
-var maxBounds = [
+
+//map bounds
+const maxBounds = [
   [5.499550, -167.276413], //Southwest
   [83.162102, -52.233040]  //Northeast
 ];
+
+//Marker Icon
 const defaultIcon = L.icon({
   iconUrl: markerIcon,
   iconSize:    [24, 41],
@@ -43,28 +52,15 @@ const defaultIcon = L.icon({
   popupAnchor: [1, -34],
   tooltipAnchor: [16, -28],
 })
+
 Modal.setAppElement('#root')
 
-const classes = [{name:"0 - 0.9",value:0},{name:"1.0 - 1.9",value:1},{name:"2.0 - 2.9",value:2},{name:"3.0 - 3.9",value:3},{name:"4.0 - 4.9",value:4},{name:"5.0 - 5.9",value:5}]
+//Filter values
+const classes = [{name:"",value:''},{name:"0 - 0.9",value:0},{name:"1.0 - 1.9",value:1},{name:"2.0 - 2.9",value:2},{name:"3.0 - 3.9",value:3},{name:"4.0 - 4.9",value:4},{name:"5.0",value:5}]
 const months = {"January": 0,"February":1,"March": 2,"April": 3, "May": 4,"June":5,"July":6,"August":7,
 "September": 8,"October":9,"November":10,"December":11}
-const colors= ["red","blue","green","yellow","black","pink","violet","steelblue","grey","greenyellow"]
-class CrossHairs extends React.Component {
-    render() {
-        const { x, y } = this.props;
-        const style = { pointerEvents: "none", stroke: "#ccc" };
-        if (!_.isNull(x) && !_.isNull(y)) {
-            return (
-                <g>
-                    <line style={style} x1={0} y1={y} x2={this.props.width} y2={y} />
-                    <line style={style} x1={x} y1={0} x2={x} y2={this.props.height} />
-                </g>
-            );
-        } else {
-            return <g />;
-        }
-    }
-}
+
+
 function Comparator(a, b) {
   if (a[0] < b[0]) return -1;
   if (a[0] > b[0]) return 1;
@@ -76,7 +72,6 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      zoomLevel: 14,
       error: null,
       isLoaded: false,
       items: [],
@@ -99,34 +94,34 @@ class App extends Component {
     this.setState({isModalOpen: true});
   }
 
-handleTimeRangeChange = timerange => {
-    this.setState({ timerange });
-};
+  handleTimeRangeChange = timerange => {
+      this.setState({ timerange });
+  };
 
-handleRatingChange(event) {
-  let points1 = []
-  let {points, columns} = this.state;
-  let index =1;
-  for(let i=1;i<columns.length;i++){
-    if(columns[i]== event.target.value){
-      index = i;
+  handleRatingChange(event) {
+    let points1 = []
+    let {points, columns} = this.state;
+    let index =1;
+    for(let i=1;i<columns.length;i++){
+      if(columns[i]== event.target.value){
+        index = i;
+      }
     }
-  }
-  for(let i =0;i< points.length;i++){
-     points1.push([points[i][0],points[i][index]]);
-  }
-  let columns1 = [columns[0],columns[index]];
-  let currencySeries = new TimeSeries({
-      name: "Ratings",
-      columns: columns1,
-      points: points1
-  });
+    for(let i =0;i< points.length;i++){
+      points1.push([points[i][0],points[i][index]]);
+    }
+    let columns1 = [columns[0],columns[index]];
+    let currencySeries = new TimeSeries({
+        name: "Ratings",
+        columns: columns1,
+        points: points1
+    });
 
-  this.setState({selectedKey: event.target.value,currencySeries,timerange: currencySeries.range()});
-}
-handleMouseMove = (x, y) => {
-    this.setState({ x, y });
-};
+    this.setState({selectedKey: event.target.value,currencySeries,timerange: currencySeries.range()});
+  }
+  handleMouseMove = (x, y) => {
+      this.setState({ x, y });
+  };
 
   
 
@@ -134,29 +129,48 @@ handleMouseMove = (x, y) => {
     this.setState({isModalOpen: false,keys:[],curr:null,currencySeries:null,style:null,timerange: null});
   }
 
- filterHotels(){
-   let items = this.state.items;
-   let filteredItems=[];
-   if(this.state.stateFilter != ''){
-      // filteredItems = filteredItems.filter((item) =>{
-      //   return (item.address.region === this.state.stateFilter);
-      // })
-      for(let i =0;i<items.length;i++){
-        if(items[i].address.region === this.state.stateFilter){
-          filteredItems.push(items[i]);
-        }
-      }
-      //setTimeout(this.setState({isLoaded: true,filteredItems}), 3000);
-      //this.setState({isLoaded:false});
-      this.setState({filteredItems});
-   }
+  //filter hotels based on choice
+  filterHotels(){
+    let filteredItems = this.state.items;
+    if(this.state.stateFilter != ''){
+      filteredItems = filteredItems.filter((item) => {
+        return (item.address.region === this.state.stateFilter);
+      });  
+    }
+    console.log(filteredItems.length);
+
    
- }
+    
+    if(this.state.classFilter != ''){
+      filteredItems = filteredItems.filter((item) => {
+        let c = parseFloat(item['hotel_class']);
+        return (c >= parseInt(this.state.classFilter) && c < parseInt(this.state.classFilter)+1);
+      });  
+    }
+    console.log(filteredItems.length);
+    if(this.state.ratingFilter != ''){
+      filteredItems = filteredItems.filter((item) => {
+        let sum = 0;
+        let count =0;
+        for(let it in item.ratings){
+          sum += parseFloat(item.ratings[it]);
+          count += 1;
+        } 
+        let avg = parseFloat(sum)/parseFloat(count);
+        return (avg >= parseInt(this.state.ratingFilter) && avg < parseInt(this.state.ratingFilter)+1);
+      });  
+    }
+    console.log(filteredItems.length);
+    this.setState({filteredItems});
+  }
+
+  //reset the filters
+  resetHotels(){
+    this.setState({filteredItems:this.state.items,ratingFilter:'',stateFilter:'',classFilter:''});
+  }
+
   componentDidMount() {
-    setInterval(() => {
-        this.forceUpdate();
-      }, 3000);
-    fetch("http://hoteladvisor.xyz:8080/api/offering")
+   fetch("http://hoteladvisor.xyz:8080/api/offering")
       .then(res => res.json())
       .then(
         (result) => {
@@ -166,9 +180,6 @@ handleMouseMove = (x, y) => {
             filteredItems: result
           });
         },
-        // Note: it's important to handle errors here
-        // instead of a catch() block so that we don't swallow
-        // exceptions from actual bugs in components.
         (error) => {
           this.setState({
             isLoaded: true,
@@ -177,6 +188,7 @@ handleMouseMove = (x, y) => {
         }
       )
   }
+  
   onMarkerClick = (e, marker) => {
     let curr = marker[0].data.options.properties;
     fetch("http://hoteladvisor.xyz:8080/api/review/"+curr['id'])
@@ -197,12 +209,7 @@ handleMouseMove = (x, y) => {
             let dt = new Date(splits[2],months[splits[0]],parseInt(splits[1].substring(0,splits[1].length-1))).getTime()
             po.push(dt);
             for(let j=0;j<keys.length;j++){
-              // if(!res.ratings[keys[j]]){
-              //   po.push(0);
-              // }else{
-                po.push(res.ratings[keys[j]]);
-              //}
-              
+              po.push(res.ratings[keys[j]]);  
             }
             points.push(po);
           }
@@ -237,30 +244,41 @@ handleMouseMove = (x, y) => {
   
 
   render() {
-    const f = format(".1f");
+   
     let range = this.state.timerange;
-    let {curr} = this.state
-    let selectedKey = this.state.selectedKey;
+    let {curr, selectedKey} = this.state
     let categories = [{ key:selectedKey, label: selectedKey}];
     let text =[]
     if(curr){
+      let min  = Math.min.apply(Math, curr['positive'].map(function(o) { return o.count; }));
+      let max = Math.max.apply(Math, curr['positive'].map(function(o) { return o.count; }));
+      if(Math.max.apply(Math, curr['negative'].map(function(o) { return o.count; })) > max){
+        max = Math.max.apply(Math, curr['negative'].map(function(o) { return o.count; }));
+      }
+      if(Math.min.apply(Math, curr['negative'].map(function(o) { return o.count; })) < min){
+        min = Math.min.apply(Math, curr['negative'].map(function(o) { return o.count; }));
+      }
       for(let key in curr.positive){
         let k = Math.floor(Math.random() * rotarray.length);
         while(k == rotarray.lentgh){
           k = Math.floor(Math.random() * rotarray.length)
         }
         let dt = new Date().getTime();
+        let count = parseInt(curr['positive'][key]['count']);
+        console.log( max)
+        let size = (count == min) ? fontMin
+        : ((count / max) * (fontMax - fontMin)) + fontMin;
+        console.log(size);
         text.push(
           
           <div
               key ={dt+"_"+key}
               style={{
                 fontFamily: 'serif',
-                fontSize: 40,
                 fontWeight: 'bold',
                 color: 'green',
-                rotate: rotarray[k]
-              }}>{curr['positive'][key]['word']}
+                fontSize: size
+              }} rotate={rotarray[k]}>{curr['positive'][key]['word']}
             </div>
         )
       } 
@@ -275,11 +293,11 @@ handleMouseMove = (x, y) => {
           key ={dt+"_"+key}
               style={{
                 fontFamily: 'serif',
-                fontSize: 40,
                 fontWeight: 'bold',
                 color: 'red',
-                rotate: rotarray[k]
-              }}>{curr['negative'][key]['word']}
+              }}
+              rotate={rotarray[k]}>
+              {curr['negative'][key]['word']}
             </div>
         )
       } 
@@ -293,20 +311,10 @@ handleMouseMove = (x, y) => {
     let ratingoptions = classes.map((st)=>{
       return(<option key={st.value} value={st.value}>{st.name}</option>)
     });
-    if(this.state.timerange){    
-      if (this.state.tracker) {
-            //const index = this.state.currencySeries.bisect(this.state.tracker);
-           // const trackerEvent = this.state.currencySeries.at(index);
-            categories = [{ key:selectedKey, label: selectedKey}];
-            // this.state.keys.map((key) =>{
-            //   categories.push({ key, label: key, value: `${f(trackerEvent.get(key))}` })
-            // })
-        }
-      }
-      let options=[]
-      options = this.state.keys.map((key)=>{
+    let options=[]
+    options = this.state.keys.map((key)=>{
         return(<option key={key} value={key}>{key}</option>)
-      })
+    })
       
     const { error, isLoaded, filteredItems } = this.state;
     if (error) {
@@ -314,8 +322,7 @@ handleMouseMove = (x, y) => {
     } else if (!isLoaded) {
       return <div>Loading...</div>;
     } else {
-      console.log(filteredItems.length)
-      const markers = filteredItems.map((v, i) => {
+     const markers = filteredItems.map((v, i) => {
         let rat=[];
         let dt = new Date().getTime();
         for (let x in v.ratings){
@@ -360,10 +367,11 @@ handleMouseMove = (x, y) => {
             <button style={{height:"25px",borderRadius:"5px",backgroundColor:"#8C1D40",color:"white",
             paddingRight:"10px",marginLeft:"10px"}} onClick={() => {this.filterHotels()}}>FILTER</button>
             <button style={{height:"25px",borderRadius:"5px",backgroundColor:"white",color:"#8c1d40",
-            paddingRight:"10px",marginLeft:"10px"}} onClick={this.resetHotels}>RESET</button>
+            paddingRight:"10px",marginLeft:"10px"}} onClick={() => this.resetHotels()}>RESET</button>
           </h4>
       </div>
       
+      {/*Map*/}
       <Map center={position} zoom={16} preferCanvas={true} maxBounds={maxBounds} style={{height: '90vh'}}>
         <TileLayer
           attribution="&amp;copy <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
@@ -373,6 +381,7 @@ handleMouseMove = (x, y) => {
          {markers}
           </CanvasMarkersLayer>
       </Map>
+
       <Modal
           isOpen={this.state.isModalOpen}
           onRequestClose={this.closeModal}
@@ -383,13 +392,13 @@ handleMouseMove = (x, y) => {
           <div>
           <div className="row">
             <div className="col-md-12">
-              <h2 style={{textAlign:"center"}}>{this.state.curr.name}<span style={{float:'right'}}><FaTimes onClick={this.closeModal}/></span></h2>
+              <h2 style={{textAlign:"center",color:"#8C1D40"}}>{this.state.curr.name}<span style={{float:'right'}}><FaTimes onClick={this.closeModal}/></span></h2>
             </div>
             <div className="col-md-12" style={{marginTop:"20px",marginBottom:"20px",textAlign:"center"}}>
-              <h2 style={{textAlign:"center"}}>Ratings History</h2>
+              <h2 style={{textAlign:"center",color:"#8C1D40"}}>Ratings History</h2>
             </div>
             <div style={{marginTop:"20px",marginBottom:"20px",textAlign:"center"}} className="col-md-12">
-              <label style={{paddingRight:"10px"}}>
+              <label style={{paddingRight:"10px",color:"#8C1D40"}}>
                 Select Rating Type:
                 <select value={this.state.selectedKey} onChange={(event) => {this.handleRatingChange(event)}}>
                   {options}
@@ -398,64 +407,56 @@ handleMouseMove = (x, y) => {
             </div>
             <div className="col-md-12">
                   <Resizable>
-                      <ChartContainer
-                          timeRange={range}
-                          timeAxisStyle={{
-                              ticks: {
-                                  stroke: "#AAA",
-                                  opacity: 0.25,
-                                  "stroke-dasharray": "1,1"
-                                  // Note: this isn't in camel case because this is
-                                  // passed into d3's style
-                              },
-                              values: {
-                                  fill: "#AAA",
-                                  "font-size": 12
-                              }
-                          }}
-                          showGrid={true}
-                          paddingRight={100}
-                          maxTime={this.state.currencySeries.range().end()}
-                          minTime={this.state.currencySeries.range().begin()}
-                          timeAxisAngledLabels={true}
-                          timeAxisHeight={65}
-                           onBackgroundClick={() => this.setState({ selection: null })}
-          
-                          onTimeRangeChanged={this.handleTimeRangeChange}
-                          minDuration={1000 * 60 * 60 * 24}
-                      >
-                          <ChartRow height="400">
-                              <YAxis
-                                  id="y"
-                                  label="ratings"
-                                  min={0}
-                                  max={5}
-                                  style={{
-                                      ticks: {
-                                          stroke: "#AAA",
-                                          opacity: 0.25,
-                                          "stroke-dasharray": "1,1"
-                                          // Note: this isn't in camel case because this is
-                                          // passed into d3's style
-                                      }
-                                  }}
-                                  width="60"
-                                  type="linear"
-                                  format=".1f"
+                    <ChartContainer
+                        timeRange={range}
+                        timeAxisStyle={{
+                            ticks: {
+                                stroke: "#AAA",
+                                opacity: 0.25,
+                                "stroke-dasharray": "1,1"
+                            },
+                            values: {
+                                fill: "#AAA",
+                                "font-size": 12
+                            }
+                        }}
+                        showGrid={true}
+                        paddingRight={100}
+                        maxTime={this.state.currencySeries.range().end()}
+                        minTime={this.state.currencySeries.range().begin()}
+                        timeAxisAngledLabels={true}
+                        timeAxisHeight={65}
+                        onBackgroundClick={() => this.setState({ selection: null })}
+                        onTimeRangeChanged={this.handleTimeRangeChange}
+                        minDuration={1000 * 60 * 60 * 24}
+                    >
+                      <ChartRow height="400">
+                          <YAxis
+                              id="y"
+                              label="ratings"
+                              min={0}
+                              max={5}
+                              style={{
+                                  ticks: {
+                                      stroke: "#AAA",
+                                      opacity: 0.25,
+                                      "stroke-dasharray": "1,1"
+                                  }
+                              }}
+                              width="60"
+                              type="linear"
+                              format=".1f"
+                          />
+                          <Charts>
+                              <LineChart
+                                  axis="y"
+                                  breakLine={false}
+                                  series={this.state.currencySeries}
+                                  columns={[this.state.selectedKey]}
+                                  style={this.state.style}
                               />
-                              <Charts>
-                                  <LineChart
-                                      axis="y"
-                                      breakLine={false}
-                                      series={this.state.currencySeries}
-                                      columns={[this.state.selectedKey]}
-                                      style={this.state.style}
-                                      //interpolation="curveBasis"
-                                      
-                                  />
-                                  <CrossHairs x={this.state.x} y={this.state.y} />
-                              </Charts>
-                          </ChartRow>
+                          </Charts>
+                      </ChartRow>
                       </ChartContainer>
                   </Resizable>
               </div>
@@ -480,7 +481,7 @@ handleMouseMove = (x, y) => {
           </div>
           <div className="row">
             <div className="col-md-12" style={{marginTop:"20px",marginBottom:"20px",textAlign:"center"}}>
-              <h2 style={{textAlign:"center"}}>People Opinions</h2>
+              <h2 style={{textAlign:"center",color:"#8C1D40"}}>Opinion Cloud</h2>
             </div>
             <div className="col-md-12">
               <div className="app-outer">
@@ -489,11 +490,6 @@ handleMouseMove = (x, y) => {
                     className='tag-cloud'
                     style={{
                       fontFamily: 'sans-serif',
-                      //fontSize: () => Math.round(Math.random() * 50) + 16,
-                      fontSize: 30,
-                      color: () => randomColor({
-                        hue: 'blue'
-                      }),
                       padding: 5,
                       height: '900px',
                     width:'100%'
@@ -515,14 +511,6 @@ handleMouseMove = (x, y) => {
 }
 
 const styles = {
-content : {
-},
-red :{
-  color: 'red'
-},
-green: {
-  color: 'green'
-}
 
 }
 export default App;
