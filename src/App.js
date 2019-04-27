@@ -25,6 +25,17 @@ import {
   styler
 } from "react-timeseries-charts";
 import {FaTimes} from 'react-icons/fa';
+import TagCloud from 'react-tag-cloud';
+import randomColor from 'randomcolor';
+ 
+class MyCloud extends Component {
+  render() {
+    return (
+     null
+    );
+  }
+}
+
 const position = [33.44896,-112.073]
 var maxBounds = [
   [5.499550, -167.276413], //Southwest
@@ -70,6 +81,7 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      zoomLevel: 14,
       error: null,
       isLoaded: false,
       items: [],
@@ -91,13 +103,13 @@ class App extends Component {
   openModal() {
     this.setState({isModalOpen: true});
   }
-  handleTrackerChanged = tracker => {
-    if (!tracker) {
-        this.setState({ tracker, x: null, y: null });
-    } else {
-        this.setState({ tracker });
-    }
-};
+//   handleTrackerChanged = tracker => {
+//     if (!tracker) {
+//         this.setState({ tracker, x: null, y: null });
+//     } else {
+//         this.setState({ tracker });
+//     }
+// };
 
 handleTimeRangeChange = timerange => {
     this.setState({ timerange });
@@ -247,8 +259,9 @@ handleMouseMove = (x, y) => {
   render() {
     const f = format(".1f");
     let range = this.state.timerange;
-    let categories =[]
     let selectedKey = this.state.selectedKey;
+    let categories = [{ key:selectedKey, label: selectedKey}];
+    
     let stateoptions = states.map((st)=>{
       return(<option key={st.abbreviation} value={st.abbreviation}>{st.name}</option>)
     });
@@ -260,9 +273,9 @@ handleMouseMove = (x, y) => {
     });
     if(this.state.timerange){    
       if (this.state.tracker) {
-            const index = this.state.currencySeries.bisect(this.state.tracker);
-            const trackerEvent = this.state.currencySeries.at(index);
-            categories = [{ key:selectedKey, label: selectedKey, value: `${f(trackerEvent.get(selectedKey))}` }];
+            //const index = this.state.currencySeries.bisect(this.state.tracker);
+           // const trackerEvent = this.state.currencySeries.at(index);
+            categories = [{ key:selectedKey, label: selectedKey}];
             // this.state.keys.map((key) =>{
             //   categories.push({ key, label: key, value: `${f(trackerEvent.get(key))}` })
             // })
@@ -297,18 +310,9 @@ handleMouseMove = (x, y) => {
           </Tooltip>
         </Marker>);
       });
-
+      
       //const position = [this.state.lat, this.state.lng]
-      let map =<Map center={position} zoom={16} preferCanvas={true} maxBounds={maxBounds} style={{height: '90vh'}}>
-        <TileLayer
-          attribution="&amp;copy <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <CanvasMarkersLayer onMarkerClick={(e, marker) => this.onMarkerClick(e, marker)}  dataKey='properties'>
-         {markers}
-          </CanvasMarkersLayer>
-      </Map>
-      return (
+        return (
         <div>
       <div style={{height:"10vh",backgroundColor:"#8C1D40",color:"white"}}>
           <h2 style={{textAlign:"center"}}>HOTEL ADVISOR</h2>
@@ -337,7 +341,15 @@ handleMouseMove = (x, y) => {
             paddingRight:"10px",marginLeft:"10px"}} onClick={this.resetHotels}>RESET</button>
           </h4>
       </div>
-      {map}
+      <Map center={position} zoom={16} preferCanvas={true} maxBounds={maxBounds} style={{height: '90vh'}}>
+        <TileLayer
+          attribution="&amp;copy <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <CanvasMarkersLayer onMarkerClick={(e, marker) => this.onMarkerClick(e, marker)}  dataKey='properties'>
+         {markers}
+          </CanvasMarkersLayer>
+      </Map>
       <Modal
           isOpen={this.state.isModalOpen}
           onRequestClose={this.closeModal}
@@ -384,11 +396,9 @@ handleMouseMove = (x, y) => {
                           minTime={this.state.currencySeries.range().begin()}
                           timeAxisAngledLabels={true}
                           timeAxisHeight={65}
-                          onTrackerChanged={this.handleTrackerChanged}
                            onBackgroundClick={() => this.setState({ selection: null })}
-                           enablePanZoom={true}
+          
                           onTimeRangeChanged={this.handleTimeRangeChange}
-                          onMouseMove={(x, y) => this.handleMouseMove(x, y)}
                           minDuration={1000 * 60 * 60 * 24}
                       >
                           <ChartRow height="400">
@@ -443,6 +453,57 @@ handleMouseMove = (x, y) => {
                           }
                       />
                   </span>
+              </div>
+          </div>
+          <div className="row">
+              <div className="col-md-12">
+              <TagCloud 
+            className='tag-cloud'
+            style={{
+              fontFamily: 'sans-serif',
+              //fontSize: () => Math.round(Math.random() * 50) + 16,
+              fontSize: 30,
+              color: () => randomColor({
+                hue: 'blue'
+              }),
+              padding: 5,
+            }}>
+            <div
+              style={{
+                fontFamily: 'serif',
+                fontSize: 40,
+                fontStyle: 'italic',
+                fontWeight: 'bold',
+                color: randomColor()
+              }}>Futurama</div>
+            <div style={styles.large}>Transformers</div>
+            <div style={styles.large}>Simpsons</div>
+            <div style={styles.large}>Dragon Ball</div>
+            <div style={styles.large}>Rick & Morty</div>
+            <div style={{fontFamily: 'courier'}}>He man</div>
+            <div style={{fontSize: 30}}>World trigger</div>
+            <div style={{fontStyle: 'italic'}}>Avengers</div>
+            <div style={{fontWeight: 200}}>Family Guy</div>
+            <div style={{color: 'green'}}>American Dad</div>
+            <div>Gobots</div>
+            <div>Thundercats</div>
+            <div>M.A.S.K.</div>
+            <div>GI Joe</div>
+            <div>Inspector Gadget</div>
+            <div>Bugs Bunny</div>
+            <div>Tom & Jerry</div>
+            <div>Cowboy Bebop</div>
+            <div>Evangelion</div>
+            <div>Bleach</div>
+            <div>GITS</div>
+            <div>Pokemon</div>
+            <div>She Ra</div>
+            <div>Fullmetal Alchemist</div>
+            <div>Gundam</div>
+            <div>Uni Taisen</div>
+            <div>Pinky and the Brain</div>
+            <div>Bobs Burgers</div>
+          </TagCloud>
               </div>
           </div>
       </div>
